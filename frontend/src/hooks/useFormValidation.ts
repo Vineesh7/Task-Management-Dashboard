@@ -9,7 +9,7 @@ type Validator<T> = (values: T) => Errors<T>;
  * - Call clearField(key) on change to dismiss errors as the user types.
  */
 export function useFormValidation<T extends Record<string, any>>(
-  validator: Validator<T>
+  validator: Validator<T>,
 ) {
   const [errors, setErrors] = useState<Errors<T>>({});
 
@@ -19,7 +19,7 @@ export function useFormValidation<T extends Record<string, any>>(
       setErrors(result);
       return Object.keys(result).length === 0;
     },
-    [validator]
+    [validator],
   );
 
   const clearField = useCallback((field: keyof T) => {
