@@ -25,6 +25,7 @@ A full-stack Kanban-style task management application built with TypeScript acro
 | **Backend**    | Node.js, Express, TypeScript                                 |
 | **Database**   | PostgreSQL with Prisma ORM                                   |
 | **Auth**       | JWT (jsonwebtoken) + bcrypt password hashing                 |
+| **Security**   | CORS origin restriction, request body size limits, email normalization |
 | **Validation** | Zod (backend), custom validation hooks (frontend)            |
 | **DnD**        | @hello-pangea/dnd (maintained fork of react-beautiful-dnd)   |
 | **Testing**    | Jest + ts-jest (backend unit tests)                          |
@@ -58,6 +59,8 @@ HTTP Request
 - **Services** enforce authorization ("does this user own this project?") and orchestrate operations. They are unit-testable with mocked repositories.
 - **Repositories** are the only layer that knows about Prisma. If the ORM changes, only repositories are affected.
 
+**Server / App separation** — `app.ts` exports the Express application without calling `listen()`, while `server.ts` is the entry point that starts the HTTP server. This allows the app to be imported directly by test frameworks like supertest without binding to a port.
+
 ### Frontend — Context + Services
 
 ```
@@ -68,6 +71,7 @@ Pages ──→ Custom Hooks ──→ Context Providers ──→ Service Layer
 - **Context API** manages three state slices: Auth, Projects, Tasks.
 - **Service layer** contains pure async functions that call the API and return typed data. No React dependencies — fully testable in isolation.
 - **Axios interceptors** handle JWT attachment (request) and 401 auto-logout (response).
+- **Accessibility** — Skip-to-content link, ARIA attributes on modals (`role="dialog"`, `aria-modal`, `aria-labelledby`), `aria-invalid`/`aria-describedby` on form inputs, `aria-pressed` on toggle buttons, `aria-hidden` on decorative icons, and keyboard-accessible task cards.
 
 ## Project Structure
 
@@ -92,7 +96,8 @@ task-dashboard/
 │   │   │   ├── app-error.ts           # Custom error class (400–409)
 │   │   │   ├── async-handler.ts       # Async route wrapper
 │   │   │   └── response.ts            # Consistent JSON helpers
-│   │   └── app.ts                     # Express setup + route mounting
+│   │   ├── app.ts                     # Express setup + route mounting
+│   │   └── server.ts                  # Entry point — starts HTTP server
 │   └── tests/                         # Unit tests (14 tests, 3 suites)
 │
 ├── frontend/
@@ -224,8 +229,9 @@ Create a `backend/.env` file with the following variables:
 | `DATABASE_URL`   | PostgreSQL connection string | `postgresql://postgres:postgres@localhost:5432/task_dashboard?schema=public` |
 | `JWT_SECRET`     | Secret key for signing JWTs  | A random string, at least 32 characters                                      |
 | `JWT_EXPIRES_IN` | Token expiry duration        | `7d`                                                                         |
+| `FRONTEND_URL`   | Allowed CORS origin (prod)   | `https://your-frontend.com`                                                  |
 
-The frontend does not require a `.env` file. In development, Vite proxies `/api` requests to `http://localhost:3000`.
+The frontend does not require a `.env` file. In development, Vite proxies `/api` requests to `http://localhost:3000` and CORS is configured to allow `http://localhost:5173`.
 
 ## Running Locally
 
@@ -296,7 +302,7 @@ cd backend
 npm run build
 ```
 
-2. Set production environment variables (especially `NODE_ENV=production` and a strong `JWT_SECRET`).
+2. Set production environment variables (especially `NODE_ENV=production`, a strong `JWT_SECRET`, and `FRONTEND_URL` for CORS).
 
 3. Run database migrations against the production database:
 
