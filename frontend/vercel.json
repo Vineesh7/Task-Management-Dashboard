@@ -3,6 +3,10 @@
     {
       "source": "/api/(.*)",
       "destination": "https://task-management-dashboard-dsv4.onrender.com/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
