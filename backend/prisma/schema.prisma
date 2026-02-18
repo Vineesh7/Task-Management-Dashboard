@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── User ────────────────────────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  projects      Project[]
+  assignedTasks Task[]    @relation("TaskAssignee")
+
+  // email already has a unique index; no additional indexes needed
+  @@map("users")
+}
+
+// ─── Project ─────────────────────────────────────────────────────────────────
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  ownerId     String   @map("owner_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  owner User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tasks Task[]
+
+  // GET /api/projects — filters by ownerId, orders by createdAt desc
+  @@index([ownerId, createdAt(sort: Desc)], name: "idx_project_owner_created")
+  @@map("projects")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+// ─── Task ────────────────────────────────────────────────────────────────────
+
+model Task {
+  id          String       @id @default(uuid())
+  title       String
+  description String?
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  position    Int          @default(0)
+  dueDate     DateTime?    @map("due_date")
+  projectId   String       @map("project_id")
+  assigneeId  String?      @map("assignee_id")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  project  Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee User?   @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  // GET /api/projects/:id/tasks — filters by projectId, orders by status + position
+  @@index([projectId, status, position], name: "idx_task_project_status_pos")
+
+  // Dashboard task counts — filters by projectId alone
+  @@index([projectId], name: "idx_task_project")
+
+  // "My tasks" query — filters by assigneeId
+  @@index([assigneeId], name: "idx_task_assignee")
+
+  // Filter overdue tasks — scans by dueDate
+  @@index([dueDate], name: "idx_task_due_date")
+
+  @@map("tasks")
+}
