@@ -8,7 +8,7 @@ type Validator<T> = (values: T) => Errors<T>;
  * - Call validate(values) before submit — returns true if no errors.
  * - Call clearField(key) on change to dismiss errors as the user types.
  */
-export function useFormValidation<T extends Record<string, unknown>>(
+export function useFormValidation<T extends Record<string, any>>(
   validator: Validator<T>
 ) {
   const [errors, setErrors] = useState<Errors<T>>({});
