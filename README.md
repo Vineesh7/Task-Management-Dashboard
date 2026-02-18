@@ -295,51 +295,51 @@ Tests use **mocked repositories** — no database connection required.
 
 ## Deployment
 
-### Backend
+The application is deployed and accessible at:
 
-1. Build the TypeScript:
+| Service      | Platform | URL                                                                                          |
+| ------------ | -------- | -------------------------------------------------------------------------------------------- |
+| **Frontend** | Vercel   | [task-management-dashboard-inky-nine.vercel.app](https://task-management-dashboard-inky-nine.vercel.app) |
+| **Backend**  | Render   | [task-management-dashboard-dsv4.onrender.com](https://task-management-dashboard-dsv4.onrender.com)       |
+| **Database** | Render   | PostgreSQL (managed by Render)                                                               |
 
-```bash
-cd backend
-npm run build
-```
+> **Note:** The Render free tier spins down after inactivity. The first request may take 30–60 seconds while the backend cold-starts.
 
-2. Set production environment variables (especially `NODE_ENV=production`, a strong `JWT_SECRET`, and `FRONTEND_URL` for CORS).
+### How it works
 
-3. Run database migrations against the production database:
+- **Vercel** builds and serves the React frontend from `frontend/`.
+- API requests (`/api/*`) are proxied to the Render backend via Vercel rewrites configured in `frontend/vercel.json`.
+- **Render** runs the Express backend with `npm start` (compiled TypeScript) and hosts the PostgreSQL database.
+- All non-API routes fall back to `index.html` for client-side routing (SPA fallback).
 
-```bash
-DATABASE_URL="<production-url>" npx prisma migrate deploy
-```
+### Environment variables on Render
 
-4. Start the server:
+| Variable       | Value                                    |
+| -------------- | ---------------------------------------- |
+| `NODE_ENV`     | `production`                             |
+| `DATABASE_URL` | Provided by Render PostgreSQL add-on     |
+| `JWT_SECRET`   | A strong random string (32+ characters)  |
+| `JWT_EXPIRES_IN` | `7d`                                   |
 
-```bash
-npm start
-```
+### Deploy your own
 
-### Frontend
+#### Backend (Render)
 
-1. Build the production bundle:
+1. Create a new **Web Service** on [Render](https://render.com) connected to your GitHub repo.
+2. Set the **Root Directory** to `backend`.
+3. Set **Build Command** to `npm install && npx prisma generate && npm run build`.
+4. Set **Start Command** to `npm start`.
+5. Add a **PostgreSQL** database and link the `DATABASE_URL` env var.
+6. Add `JWT_SECRET`, `JWT_EXPIRES_IN`, and `NODE_ENV=production` as environment variables.
+7. Run `npx prisma migrate deploy` from the Render shell to create tables.
 
-```bash
-cd frontend
-npm run build
-```
+#### Frontend (Vercel)
 
-2. The output is in `frontend/dist/`. Serve it with any static file server (Nginx, Caddy, Vercel, Netlify).
-
-3. Configure the static server to:
-   - Proxy `/api/*` requests to the backend.
-   - Serve `index.html` for all other routes (SPA fallback).
-
-### Docker (optional)
-
-Both services can be containerized. A typical setup would use:
-
-- A `Dockerfile` for the backend (Node.js alpine image).
-- A multi-stage `Dockerfile` for the frontend (build with Node.js, serve with Nginx).
-- `docker-compose.yml` to orchestrate backend, frontend, and PostgreSQL.
+1. Import the GitHub repo on [Vercel](https://vercel.com).
+2. Set the **Root Directory** to `frontend`.
+3. Framework preset will auto-detect **Vite** — no extra config needed.
+4. Update `frontend/vercel.json` to point the API rewrite to your Render backend URL.
+5. Deploy.
 
 ## Assumptions
 
