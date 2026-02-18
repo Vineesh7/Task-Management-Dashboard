@@ -172,98 +172,88 @@ Errors return `{ success: false, error: string }`.
 
 ### Prerequisites
 
-- **Node.js** >= 20.19.x (or >= 22.12.x)
-- **PostgreSQL** >= 14
-- **npm** >= 9.x
+Make sure you have the following installed on your machine:
 
-### 1. Clone the repository
+- **Node.js** >= 20 — [Download](https://nodejs.org/)
+- **PostgreSQL** >= 14 — [Download](https://www.postgresql.org/download/)
+- **npm** >= 9 (comes with Node.js)
+
+Verify your installations:
 
 ```bash
-git clone <repository-url>
-cd task-dashboard
+node -v    # should print v20.x.x or higher
+npm -v     # should print 9.x.x or higher
+psql -V    # should print psql (PostgreSQL) 14.x or higher
 ```
 
-### 2. Set up the database
-
-Create a PostgreSQL database:
+### Quick Start (copy-paste friendly)
 
 ```bash
+# 1. Clone the repo
+git clone https://github.com/Vineesh7/Task-Management-Dashboard.git
+cd Task-Management-Dashboard
+
+# 2. Create the PostgreSQL database
 psql -U postgres -c "CREATE DATABASE task_dashboard;"
+
+# 3. Set up backend environment variables
+cp backend/.env.example backend/.env
+# Edit backend/.env with your PostgreSQL credentials if they differ from the defaults
+
+# 4. Install dependencies for both backend and frontend
+cd backend && npm install && cd ../frontend && npm install && cd ..
+
+# 5. Generate Prisma client and run database migrations
+cd backend
+npx prisma generate
+npx prisma migrate dev --name init
+
+# 6. Start the backend (keep this terminal open)
+npm run dev
 ```
 
-### 3. Configure environment variables
+Open a **second terminal**:
+
+```bash
+# 7. Start the frontend
+cd frontend
+npm run dev
+```
+
+The app is now running:
+- **Frontend:** http://localhost:5173
+- **Backend API:** http://localhost:3000
+
+> The frontend automatically proxies `/api` requests to the backend — no extra configuration needed.
+
+### Verify it works
+
+1. Open http://localhost:5173 in your browser
+2. Register a new account
+3. Create a project from the dashboard
+4. Click into the project and add tasks
+5. Drag tasks between columns to change their status
+
+## Environment Variables
+
+Create a `backend/.env` file (or copy from the example):
 
 ```bash
 cp backend/.env.example backend/.env
 ```
 
-Edit `backend/.env` with your actual database credentials (see [Environment Variables](#environment-variables)).
-
-### 4. Install dependencies
-
-```bash
-# Backend
-cd backend
-npm install
-
-# Frontend
-cd ../frontend
-npm install
-```
-
-### 5. Run database migrations
-
-```bash
-cd backend
-npx prisma migrate dev --name init
-```
-
-This creates all tables, indexes, and enums in your PostgreSQL database.
-
-## Environment Variables
-
-Create a `backend/.env` file with the following variables:
-
-| Variable         | Description                  | Example                                                                      |
+| Variable         | Description                  | Default / Example                                                            |
 | ---------------- | ---------------------------- | ---------------------------------------------------------------------------- |
 | `PORT`           | Server port                  | `3000`                                                                       |
 | `NODE_ENV`       | Environment                  | `development`                                                                |
 | `DATABASE_URL`   | PostgreSQL connection string | `postgresql://postgres:postgres@localhost:5432/task_dashboard?schema=public` |
-| `JWT_SECRET`     | Secret key for signing JWTs  | A random string, at least 32 characters                                      |
+| `JWT_SECRET`     | Secret key for signing JWTs  | Any random string, at least 10 characters                                    |
 | `JWT_EXPIRES_IN` | Token expiry duration        | `7d`                                                                         |
-| `FRONTEND_URL`   | Allowed CORS origin (prod)   | `https://your-frontend.com`                                                  |
+| `FRONTEND_URL`   | Allowed CORS origin (prod only) | Not needed locally                                                        |
 
-The frontend does not require a `.env` file. In development, Vite proxies `/api` requests to `http://localhost:3000` and CORS is configured to allow `http://localhost:5173`.
+**Defaults work out of the box** if your local PostgreSQL runs on port `5432` with user `postgres` and password `postgres`. If your credentials differ, update the `DATABASE_URL` in `backend/.env`.
 
-## Running Locally
-
-Open two terminal windows:
-
-**Terminal 1 — Backend:**
-
-```bash
-cd backend
-npm run dev
-```
-
-The API server starts at `http://localhost:3000`.
-
-**Terminal 2 — Frontend:**
-
-```bash
-cd frontend
-npm run dev
-```
-
-The React app starts at `http://localhost:5173` and proxies API calls to the backend.
-
-### Verify it works
-
-1. Open `http://localhost:5173` in your browser.
-2. Register a new account.
-3. Create a project from the dashboard.
-4. Click into the project and add tasks.
-5. Drag tasks between columns.
+The frontend does **not** require a `.env` file. In development, Vite proxies `/api` requests to `http://localhost:3000` automatically.
 
 ## Running Tests
 
