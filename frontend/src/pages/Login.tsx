@@ -37,6 +37,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showRegisterHint, setShowRegisterHint] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { errors, validate, clearField } = useFormValidation(validateLogin);
@@ -53,7 +54,14 @@ export default function Login() {
         await login({ email, password });
         navigate(redirectTo, { replace: true });
       } catch (err) {
-        setServerError(err instanceof Error ? err.message : "Login failed");
+        const message = err instanceof Error ? err.message : "Login failed";
+        if (message.toLowerCase().includes("no account found")) {
+          setServerError("No account found with this email. Please create an account first.");
+          setShowRegisterHint(true);
+        } else {
+          setServerError(message);
+          setShowRegisterHint(false);
+        }
       } finally {
         setIsSubmitting(false);
       }
@@ -75,7 +83,22 @@ export default function Login() {
         </div>
 
         {/* ── Server error ─────────────────────────────────────────── */}
-        {serverError && <ErrorAlert message={serverError} />}
+        {serverError && (
+          <div>
+            <ErrorAlert message={serverError} />
+            {showRegisterHint && (
+              <p className="mt-2 text-center text-sm text-gray-600">
+                <Link
+                  to="/register"
+                  className="font-medium text-indigo-600 hover:text-indigo-500"
+                >
+                  Create an account
+                </Link>{" "}
+                to get started.
+              </p>
+            )}
+          </div>
+        )}
 
         {/* ── Form ─────────────────────────────────────────────────── */}
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>

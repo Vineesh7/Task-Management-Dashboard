@@ -144,7 +144,7 @@ describe("AuthService", () => {
     // ───────────────────────────────────────────────────────────────────
     // TEST 5: Non-existent user
     // ───────────────────────────────────────────────────────────────────
-    it("should throw 401 when user does not exist", async () => {
+    it("should throw 404 when user does not exist", async () => {
       // Arrange
       mockRepo.findByEmail.mockResolvedValue(null);
 
@@ -152,8 +152,8 @@ describe("AuthService", () => {
       await expect(
         authService.login({ email: "nobody@test.com", password: "anything" })
       ).rejects.toMatchObject({
-        statusCode: 401,
-        message: "Invalid email or password",
+        statusCode: 404,
+        message: "No account found with this email. Please create an account first.",
       });
     });
   });

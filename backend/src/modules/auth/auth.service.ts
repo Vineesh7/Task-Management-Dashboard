@@ -41,7 +41,7 @@ export class AuthService {
     // 1. Look up user (includes password hash for comparison)
     const user = await this.authRepo.findByEmail(input.email);
     if (!user) {
-      throw AppError.unauthorized("Invalid email or password");
+      throw AppError.notFound("No account found with this email. Please create an account first.");
     }
 
     // 2. Verify password
