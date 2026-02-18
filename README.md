@@ -1,5 +1,7 @@
 # Task Management Dashboard
 
+**[Live Demo](https://task-management-dashboard-inky-nine.vercel.app)**
+
 A full-stack Kanban-style task management application built with TypeScript across the entire stack. Users can register, create projects, and manage tasks through an interactive drag-and-drop board.
 
 ## Table of Contents
